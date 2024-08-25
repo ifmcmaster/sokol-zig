@@ -280,6 +280,16 @@ pub fn buildLibSokol(b: *Build, options: LibSokolOptions) !*Build.Step.Compile {
         });
     }
 
+    // lib.addCSourceFile(.{
+    //     .file = b.path(csrc_root ++ "sokol_gp.c"),
+    //     .flags = &.{
+    //         "-DIMPL",
+    //         backend_cflags,
+    //         "-fno-sanitize=undefined",
+    //         "-std=c99",
+    //     },
+    // });
+
     // optional Dear ImGui support, the called is required to also
     // add the cimgui include path to the returned compile step
     if (options.with_sokol_imgui) {
