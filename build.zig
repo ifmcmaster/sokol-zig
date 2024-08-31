@@ -271,6 +271,7 @@ pub fn buildLibSokol(b: *Build, options: LibSokolOptions) !*Build.Step.Compile {
         "sokol_shape.c",
         "sokol_glue.c",
         "sokol_fetch.c",
+        "sokol_fontstash.c",
     };
     inline for (csources) |csrc| {
         lib.addCSourceFile(.{
@@ -490,3 +491,21 @@ fn buildShaders(b: *Build, target: Build.ResolvedTarget) void {
         shdc_step.dependOn(&cmd.step);
     }
 }
+
+// const fontstash = b.addStaticLibrary(.{
+//         .name = "fontstash",
+//         .target = target,
+//         .optimize = optimize,
+//     });
+//     fontstash.linkLibC();
+//     fontstash.addIncludePath(b.path("./libs/sokol-zig/src/sokol/c"));
+//     fontstash.addCSourceFile(.{
+//         .file = b.path("src/core/text/sokol_fontstash.c"),
+//         .flags = &.{
+//             "-std=c99",
+//             "-fno-sanitize=undefined",
+//             "-g",
+//             "-O0",
+//         },
+//     });
+//     exe.root_module.linkLibrary(fontstash);

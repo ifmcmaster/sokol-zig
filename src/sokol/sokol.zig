@@ -10,3 +10,4 @@ pub const glue = @import("glue.zig");
 pub const fetch = @import("fetch.zig");
 pub const imgui = @import("imgui.zig");
 pub const gp = @import("gp.zig");
+pub const fontstash = @import("fontstash.zig");
