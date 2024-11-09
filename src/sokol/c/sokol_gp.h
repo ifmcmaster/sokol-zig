@@ -359,7 +359,7 @@ MIT, see LICENSE file or the end of `sokol_gp.h` file.
 #ifndef SOKOL_GP_INCLUDED
 #define SOKOL_GP_INCLUDED 1
 
-#if !defined(SOKOL_GFX_INCLUDED)
+#ifndef SOKOL_GFX_INCLUDED
 #error "Please include sokol_gfx.h before sokol_gp.h"
 #endif
 
@@ -644,15 +644,6 @@ SOKOL_GP_API_DECL sgp_desc sgp_query_desc(void);    /* Returns description of th
 #ifndef SOKOL_GFX_IMPL_INCLUDED
 #error "Please include sokol_gfx.h implementation before sokol_gp.h implementation"
 #endif
-
-#ifndef SOKOL_ASSERT
-    #include <assert.h>
-    #define SOKOL_ASSERT(c) assert(c)
-#endif
-#ifndef SOKOL_UNREACHABLE
-    #define SOKOL_UNREACHABLE SOKOL_ASSERT(false)
-#endif
-
 
 #include <math.h>
 #include <stddef.h>
@@ -1589,73 +1580,73 @@ static sg_shader _sgp_make_common_shader(void) {
     sg_backend backend = sg_query_backend();
     sg_shader_desc desc;
     memset(&desc, 0, sizeof(desc));
-    desc.fs.images[0].used = true;
-    desc.fs.images[0].multisampled = false;
-    desc.fs.images[0].image_type = SG_IMAGETYPE_2D;
-    desc.fs.images[0].sample_type = SG_IMAGESAMPLETYPE_FLOAT;
-    desc.fs.samplers[0].used = true;
-    desc.fs.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
-    desc.fs.image_sampler_pairs[0].used = true;
-    desc.fs.image_sampler_pairs[0].image_slot = 0;
-    desc.fs.image_sampler_pairs[0].sampler_slot = 0;
+    desc.images[0].stage = SG_SHADERSTAGE_FRAGMENT;
+    desc.images[0].multisampled = false;
+    desc.images[0].image_type = SG_IMAGETYPE_2D;
+    desc.images[0].sample_type = SG_IMAGESAMPLETYPE_FLOAT;
+    desc.samplers[0].stage = SG_SHADERSTAGE_FRAGMENT;
+    desc.samplers[0].sampler_type = SG_SAMPLERTYPE_FILTERING;
+    desc.image_sampler_pairs[0].stage = SG_SHADERSTAGE_FRAGMENT;
+    desc.image_sampler_pairs[0].image_slot = 0;
+    desc.image_sampler_pairs[0].sampler_slot = 0;
 
     // GLCORE / GLES3 only
-    desc.attrs[SGP_VS_ATTR_COORD].name = "coord";
-    desc.attrs[SGP_VS_ATTR_COLOR].name = "color";
-    desc.fs.image_sampler_pairs[0].glsl_name = "iTexChannel0_iSmpChannel0";
+    desc.attrs[SGP_VS_ATTR_COORD].glsl_name = "coord";
+    desc.attrs[SGP_VS_ATTR_COLOR].glsl_name = "color";
+    desc.image_sampler_pairs[0].glsl_name = "iTexChannel0_iSmpChannel0";
 
     // D3D11 only
-    desc.attrs[SGP_VS_ATTR_COORD].sem_name = "TEXCOORD";
-    desc.attrs[SGP_VS_ATTR_COORD].sem_index = 0;
-    desc.attrs[SGP_VS_ATTR_COLOR].sem_name = "TEXCOORD";
-    desc.attrs[SGP_VS_ATTR_COLOR].sem_index = 1;
-    desc.vs.d3d11_target = "vs_4_0";
-    desc.fs.d3d11_target = "ps_4_0";
+    desc.attrs[SGP_VS_ATTR_COORD].hlsl_sem_name = "TEXCOORD";
+    desc.attrs[SGP_VS_ATTR_COORD].hlsl_sem_index = 0;
+    desc.attrs[SGP_VS_ATTR_COLOR].hlsl_sem_name = "TEXCOORD";
+    desc.attrs[SGP_VS_ATTR_COLOR].hlsl_sem_index = 1;
+    desc.vertex_func.d3d11_target = "vs_4_0";
+    desc.fragment_func.d3d11_target = "ps_4_0";
 
     // entry
     switch (backend) {
         case SG_BACKEND_METAL_MACOS:
         case SG_BACKEND_METAL_IOS:
         case SG_BACKEND_METAL_SIMULATOR:
-            desc.vs.entry = "main0";
-            desc.fs.entry = "main0";
+            desc.vertex_func.entry = "main0";
+            desc.fragment_func.entry = "main0";
             break;
         default:
-            desc.vs.entry = "main";
-            desc.fs.entry = "main";
+            desc.vertex_func.entry = "main";
+            desc.fragment_func.entry = "main";
             break;
     }
 
     // source
     switch (backend) {
         case SG_BACKEND_GLCORE:
-            desc.vs.source = (const char*)sgp_vs_source_glsl410;
-            desc.fs.source = (const char*)sgp_fs_source_glsl410;
+            desc.vertex_func.source = (const char*)sgp_vs_source_glsl410;
+            desc.fragment_func.source = (const char*)sgp_fs_source_glsl410;
             break;
         case SG_BACKEND_GLES3:
-            desc.vs.source = (const char*)sgp_vs_source_glsl300es;
-            desc.fs.source = (const char*)sgp_fs_source_glsl300es;
+            desc.vertex_func.source = (const char*)sgp_vs_source_glsl300es;
+            desc.fragment_func.source = (const char*)sgp_fs_source_glsl300es;
             break;
         case SG_BACKEND_D3D11:
-            desc.vs.source = (const char*)sgp_vs_source_hlsl4;
-            desc.fs.source = (const char*)sgp_fs_source_hlsl4;
+            desc.vertex_func.source = (const char*)sgp_vs_source_hlsl4;
+            desc.fragment_func.source = (const char*)sgp_fs_source_hlsl4;
             break;
         case SG_BACKEND_METAL_MACOS:
-            desc.vs.source = (const char*)sgp_vs_source_metal_macos;
-            desc.fs.source = (const char*)sgp_fs_source_metal_macos;
+            desc.vertex_func.source = (const char*)sgp_vs_source_metal_macos;
+            desc.fragment_func.source = (const char*)sgp_fs_source_metal_macos;
             break;
         case SG_BACKEND_METAL_IOS:
         case SG_BACKEND_METAL_SIMULATOR:
-            desc.vs.source = (const char*)sgp_vs_source_metal_ios;
-            desc.fs.source = (const char*)sgp_fs_source_metal_ios;
+            desc.vertex_func.source = (const char*)sgp_vs_source_metal_ios;
+            desc.fragment_func.source = (const char*)sgp_fs_source_metal_ios;
             break;
         case SG_BACKEND_WGPU:
-            desc.vs.source = (const char*)sgp_vs_source_wgsl;
-            desc.fs.source = (const char*)sgp_fs_source_wgsl;
+            desc.vertex_func.source = (const char*)sgp_vs_source_wgsl;
+            desc.fragment_func.source = (const char*)sgp_fs_source_wgsl;
             break;
         case SG_BACKEND_DUMMY:
-            desc.vs.source = "";
-            desc.fs.source = "";
+            desc.vertex_func.source = "";
+            desc.fragment_func.source = "";
             break;
         default: {
             // Unsupported backend
@@ -1918,13 +1909,6 @@ void sgp_begin(int width, int height) {
     }
 }
 
-static void _sgp_get_pipeline_uniform_count(sg_pipeline pip, int* vs_uniform_count, int* fs_uniform_count) {
-    _sg_pipeline_t* p = _sg_lookup_pipeline(&_sg.pools, pip.id);
-    SOKOL_ASSERT(p);
-    *vs_uniform_count = p ? p->shader->cmn.stage[SG_SHADERSTAGE_VS].num_uniform_blocks : 0;
-    *fs_uniform_count = p ? p->shader->cmn.stage[SG_SHADERSTAGE_FS].num_uniform_blocks : 0;
-}
-
 void sgp_flush(void) {
     SOKOL_ASSERT(_sgp.init_cookie == _SGP_INIT_COOKIE);
     SOKOL_ASSERT(_sgp.cur_state > 0);
@@ -2011,8 +1995,8 @@ void sgp_flush(void) {
                     if (cur_imgs_id[j] != img_id) {
                         // when an image binding change we need to re-apply bindings
                         cur_imgs_id[j] = img_id;
-                        bind.fs.images[j].id = img_id;
-                        bind.fs.samplers[j].id = smp_id;
+                        bind.images[j].id = img_id;
+                        bind.samplers[j].id = smp_id;
                         apply_bindings = true;
                     }
                 }
@@ -2025,16 +2009,7 @@ void sgp_flush(void) {
                     sgp_uniform* uniform = &_sgp.uniforms[cur_uniform_index];
                     if (uniform->size > 0) {
                         sg_range uniform_range = {&uniform->content, uniform->size};
-                        int vs_uniform_count, fs_uniform_count;
-                        _sgp_get_pipeline_uniform_count(args->pip, &vs_uniform_count, &fs_uniform_count);
-                        // apply uniforms on vertex shader only when needed
-                        if (vs_uniform_count > 0) {
-                            sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, &uniform_range);
-                        }
-                        // apply uniforms on fragment shader
-                        if (fs_uniform_count > 0) {
-                            sg_apply_uniforms(SG_SHADERSTAGE_FS, 0, &uniform_range);
-                        }
+                        sg_apply_uniforms(0, &uniform_range);
                     }
                 }
                 //  draw
