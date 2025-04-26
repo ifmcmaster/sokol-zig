@@ -1,18 +1,21 @@
 .{
-    .name = "sokol-zig",
+    .name = .sokol,
     .version = "0.1.0",
-    .minimum_zig_version = "0.12.0",
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0xf9f6f48d2b47bda5,
     .paths = .{
         "src",
         "build.zig",
         "build.zig.zon",
-        "CHANGELOG.md",
-        "README.md",
     },
     .dependencies = .{
         .emsdk = .{
-            .url = "git+https://github.com/emscripten-core/emsdk#3.1.61",
-            .hash = "12200ba39d83227f5de08287b043b011a2eb855cdb077f4b165edce30564ba73400e",
+            .url = "git+https://github.com/emscripten-core/emsdk#4.0.3",
+            .hash = "N-V-__8AAOG3BQCJ9cn-N2swm2o5cLmDhmdHmtwNngOChK78",
+        },
+        .shdc = .{
+            .url = "git+https://github.com/floooh/sokol-tools-bin#9b5a3e2b57fe9783ba4d1f3249059bc4720b592f",
+            .hash = "sokolshdc-0.1.0-r2KZDss89wN1gxiX0wHwfT7jmRGtSfks2vSZsZzjJfBY",
         },
     },
 }

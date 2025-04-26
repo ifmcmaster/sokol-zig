@@ -1,8 +1,10 @@
-[![build](https://github.com/floooh/sokol-zig/actions/workflows/main.yml/badge.svg)](https://github.com/floooh/sokol-zig/actions/workflows/main.yml)
+[![build](https://github.com/floooh/sokol-zig/actions/workflows/main.yml/badge.svg)](https://github.com/floooh/sokol-zig/actions/workflows/main.yml)[![Docs](https://github.com/floooh/sokol-zig/actions/workflows/docs.yml/badge.svg)](https://github.com/floooh/sokol-zig/actions/workflows/docs.yml)
 
 Auto-generated Zig bindings for the [sokol headers](https://github.com/floooh/sokol).
 
-For Zig version 0.13.0 and 0.14.0-dev
+[Auto-generated docs](https://floooh.github.io/sokol-zig-docs) (wip)
+
+For Zig version 0.14.0+
 
 In case of breaking changes in Zig, the bindings might fall behind. Please don't hesitate to
 ping me via a Github issue, or even better, provide a PR :)
@@ -25,9 +27,9 @@ On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg
 To build the platform-native samples:
 
 ```sh
-# just build:
-zig build
-# build and run samples:
+# build all examples:
+zig build examples
+# build and run individual examples
 zig build run-clear
 zig build run-triangle
 zig build run-quad
@@ -72,7 +74,7 @@ Backend: .sokol.gfx.Backend.GLCORE33
 For the web-samples, run:
 
 ```sh
-zig build -Dtarget=wasm32-emscripten
+zig build examples -Dtarget=wasm32-emscripten
 # or to build and run one of the samples
 zig build run-clear -Dtarget=wasm32-emscripten
 ...
@@ -165,7 +167,7 @@ pub fn build(b: *Build) !void {
     });
 
     // special case handling for native vs web build
-    if (target.result.isWasm()) {
+    if (target.result.cpu.arch.isWasm()) {
         try buildWeb(b, target, optimize, dep_sokol);
     } else {
         try buildNative(b, target, optimize, dep_sokol);
@@ -208,6 +210,8 @@ fn buildWeb(b: *Build, target: Build.ResolvedTarget, optimize: OptimizeMode, dep
         .use_filesystem = false,
         .shell_file_path = dep_sokol.path("src/sokol/web/shell.html"),
     });
+    // attach Emscripten linker output to default install step
+    b.getInstallStep().dependOn(&link_step.step);
     // ...and a special run step to start the web build output via 'emrun'
     const run = sokol.emRunStep(b, .{ .name = "pacman", .emsdk = emsdk });
     run.step.dependOn(&link_step.step);
@@ -215,22 +219,55 @@ fn buildWeb(b: *Build, target: Build.ResolvedTarget, optimize: OptimizeMode, dep
 }
 ```
 
+## Using sokol headers in C code
+
+The sokol-zig build.zig exposes a C library artifact called `sokol_clib`.
+
+You can lookup the build step for this library via:
+
+```zig
+    const dep_sokol = b.dependency("sokol", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const sokol_clib = dep_sokol.artifact("sokol_clib");
+```
+
+...once you have that library artifact, 'link' it to your compile step which contains
+your own C code:
+
+```zig
+    const my_clib = ...;
+    my_clib.linkLibrary(sokol_clib);
+```
+
+This makes the Sokol C headers available to your C code in a `sokol/` subdirectory:
+
+```c
+#include "sokol/sokol_app.h"
+#include "sokol/sokol_gfx.h"
+// etc...
+```
+
+Keep in mind that the implementation is already provided in the `sokol_clib`
+static link library (e.g. don't try to build the Sokol implementations yourself
+via the `SOKOL_IMPL` macro).
+
+
 ## wasm32-emscripten caveats
 
 - Zig allocators use the `@returnAddress` builtin, which isn't supported in the Emscripten
   runtime out of the box (you'll get a runtime error in the browser's Javascript console
   looking like this: `Cannot use convertFrameToPC (needed by __builtin_return_address) without -sUSE_OFFSET_CONVERTER`.
-  To make it work, do as the error message says, to add the `-sUSE_OFFSET_CONVERTER` arg to the
-  Emscripten linker step in your `build.zig` file:
+  To link with `-sUSE_OFFSET_CONVERTER`, simply set the `.use_offset_converter` option
+  in the Emscripten linker step in your build.zig:
 
   ```zig
       const link_step = try sokol.emLinkStep(b, .{
         // ...other settings here
-        .extra_args = &.{"-sUSE_OFFSET_CONVERTER=1"},
+        .use_offset_converter = true,
     });
   ```
-
-  Also see the [kc85.zig build.zig](https://github.com/floooh/kc85.zig/blob/main/build.zig) as example!
 
 - the Zig stdlib only has limited support for the `wasm32-emscripten`
   target, for instance using `std.fs` functions will most likely fail
